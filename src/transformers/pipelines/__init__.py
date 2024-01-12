@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 from huggingface_hub import model_info
 from numpy import isin
 
+from .. import PreTrainedModel
 from ..configuration_utils import PretrainedConfig
 from ..dynamic_module_utils import get_class_from_dynamic_module
 from ..feature_extraction_utils import PreTrainedFeatureExtractor
@@ -146,6 +147,40 @@ if TYPE_CHECKING:
 
 
 logger = logging.get_logger(__name__)
+
+class LangchainConfig(PretrainedConfig):
+
+    model_type = "langchain"
+        
+    def __init__(self, runnable, **kwargs):
+        self.runnable = runnable
+        super().__init__(**kwargs)
+
+
+class LangchainModelForProxyLLM(PreTrainedModel):
+
+    def __init__(self, config):
+        super().__init__(config)
+        self.runnable = config.runnable
+
+    def forward(self, model_input):
+        return self.runnable.invoke(model_input)
+
+
+class LLMProxyPipeline(Pipeline):
+
+    def _sanitize_parameters(self, **pipeline_parameters):
+        return pipeline_parameters, pipeline_parameters, pipeline_parameters
+
+    def preprocess(self, inputs, **kwargs):
+        return {"model_input": inputs}
+
+    def _forward(self, model_inputs, **kwargs):
+        output = self.model(**model_inputs)
+        return {"output": output}
+
+    def postprocess(self, output, *_):
+        return {"output": output}
 
 
 # Register all the supported tasks here
@@ -405,6 +440,13 @@ SUPPORTED_TASKS = {
         "default": {"model": {"pt": ("caidas/swin2SR-classical-sr-x2-64", "4aaedcb")}},
         "type": "image",
     },
+    "llm-proxy": {
+        "impl": LLMProxyPipeline,
+        "tf": (),
+        "pt": (LangchainModelForProxyLLM,) if is_torch_available() else (),
+        "default": None,
+        "type": "text",
+    }
 }
 
 NO_FEATURE_EXTRACTOR_TASKS = set()
