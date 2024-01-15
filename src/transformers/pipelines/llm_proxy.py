@@ -1,14 +1,14 @@
+from langchain_core.messages.ai import AIMessage
+
 from ..configuration_utils import PretrainedConfig
 from ..modeling_utils import PreTrainedModel
 from .base import Pipeline
 
 
 class LangchainConfig(PretrainedConfig):
-
-    model_type = "langchain"
-
-    def __init__(self, runnable, **kwargs):
+    def __init__(self, runnable, mock_llm_call=False, **kwargs):
         self.runnable = runnable
+        self.mock_llm_call = mock_llm_call
         super().__init__(**kwargs)
 
 
@@ -18,7 +18,15 @@ class LangchainModelForProxyLLM(PreTrainedModel):
         self.runnable = config.runnable
 
     def forward(self, model_input):
-        return self.runnable.invoke(model_input)
+        if self.config.mock_llm_call:
+            return [
+                {"label": "3.0"}
+                for i in range(len(model_input[list(model_input.keys())[0]]))
+            ]
+        return [
+            self.runnable.invoke({k: v[i] for k, v in model_input.items()})
+            for i in range(len(model_input[list(model_input.keys())[0]]))
+        ]
 
 
 class LLMProxyPipeline(Pipeline):
@@ -30,7 +38,7 @@ class LLMProxyPipeline(Pipeline):
 
     def _forward(self, model_inputs, **kwargs):
         output = self.model(**model_inputs)
-        return {"output": output}
+        return output
 
     def postprocess(self, output, *_):
-        return {"output": output}
+        return output

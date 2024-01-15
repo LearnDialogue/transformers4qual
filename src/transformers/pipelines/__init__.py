@@ -70,7 +70,7 @@ from .image_classification import ImageClassificationPipeline
 from .image_segmentation import ImageSegmentationPipeline
 from .image_to_image import ImageToImagePipeline
 from .image_to_text import ImageToTextPipeline
-from .llm_proxy import LLMProxyPipeline, LangchainModelForProxyLLM
+from .llm_proxy import LLMProxyPipeline, LangchainModelForProxyLLM, LangchainConfig
 from .mask_generation import MaskGenerationPipeline
 from .object_detection import ObjectDetectionPipeline
 from .question_answering import QuestionAnsweringArgumentHandler, QuestionAnsweringPipeline
