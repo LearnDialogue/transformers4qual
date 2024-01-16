@@ -40,5 +40,5 @@ class LLMProxyPipeline(Pipeline):
         output = self.model(**model_inputs)
         return output
 
-    def postprocess(self, output, *_):
+    def postprocess(self, output, **kwargs):
         return output
