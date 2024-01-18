@@ -20,7 +20,7 @@ class LangchainModelForProxyLLM(PreTrainedModel):
     def forward(self, model_input):
         if self.config.mock_llm_call:
             return [
-                {"label": "3.0"}
+                f"The score is {random.randint(-1, 8)}. This was generated from a mock call."
                 for i in range(len(model_input[list(model_input.keys())[0]]))
             ]
         return [
